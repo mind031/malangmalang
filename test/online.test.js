@@ -1,0 +1,61 @@
+const { chromium } = require('playwright');
+const path = require('path');
+const fs = require('fs');
+const url = 'file:///home/claude/malangmalang/dist/index.html';
+const lib = fs.readFileSync(path.join(__dirname, 'node_modules/peerjs/dist/peerjs.min.js'), 'utf8');
+const sq = (n) => (8 - Number(n[1])) * 8 + 'abcdefgh'.indexOf(n[0]);
+(async () => {
+  const b = await chromium.launch({ args: ['--allow-loopback-in-peer-connection'] });
+  const errs = [];
+  async function mk(name, w, h) {
+    const ctx = await b.newContext({ viewport: { width: w, height: h } });
+    await ctx.route('https://cdn.jsdelivr.net/**', (r) => r.fulfill({ body: lib, contentType: 'text/javascript' }));
+    await ctx.addInitScript(() => { window.MALANG_PEER = { host: '127.0.0.1', port: 9000, path: '/', secure: false, config: { iceServers: [] } }; });
+    const p = await ctx.newPage();
+    p.on('pageerror', (e) => errs.push(name + ' ' + e.message));
+    await p.goto(url);
+    return p;
+  }
+  const host = await mk('host', 1194, 834);
+  const guest = await mk('guest', 390, 844);
+  const st = (p) => p.evaluate(() => { const G = window.__malang.G; return G ? JSON.stringify({ plies: G.hist.length, turn: G.s.turn, human: G.human, over: G.over && G.over.type, mode: G.mode }) : 'none'; });
+  const mv = async (p, a, c) => { await p.click(`.sq[data-sq="${sq(a)}"]`); await p.click(`.sq[data-sq="${sq(c)}"]`); await p.waitForTimeout(700); };
+
+  await host.click('#modeOnline'); await host.click('#onCreate'); await host.click('#startGame');
+  await host.waitForFunction(() => /\d{4}/.test(document.querySelector('#waitCode').textContent), null, { timeout: 15000 });
+  const code = await host.textContent('#waitCode');
+  console.log('room code', code);
+  await host.screenshot({ path: 'o1-host-wait.png' });
+  await guest.click('#modeOnline'); await guest.click('#onJoin');
+  for (const d of code) await guest.click(`#numpad [data-k="${d}"]`);
+  await guest.screenshot({ path: 'o2-guest-join.png' });
+  await guest.click('#numpad [data-k="go"]');
+  await guest.waitForFunction(() => window.__malang.G && window.__malang.G.mode === 'online', null, { timeout: 15000 });
+  await host.waitForTimeout(500);
+  console.log('host', await st(host), 'guest', await st(guest));
+  await mv(host, 'f2', 'f3');
+  console.log('after host move: guest', await st(guest));
+  await mv(guest, 'e7', 'e5');
+  console.log('after guest move: host', await st(host));
+  // 무르기 요청
+  await host.click('[data-act="undo"]'); await guest.waitForTimeout(500);
+  console.log('ask shown on guest', await guest.isVisible('#ask'));
+  await guest.screenshot({ path: 'o3-guest-ask.png' });
+  await guest.click('#askYes'); await host.waitForTimeout(600);
+  console.log('after undo host', await st(host), 'guest', await st(guest));
+  await mv(host, 'f2', 'f3'); await mv(guest, 'e7', 'e5'); await mv(host, 'g2', 'g4');
+  await mv(guest, 'd8', 'h4');
+  await host.waitForTimeout(1200);
+  console.log('end host', await st(host), 'guest', await st(guest));
+  await host.screenshot({ path: 'o4-host-lost.png' });
+  await guest.screenshot({ path: 'o5-guest-game.png' });
+  await guest.click('#again'); await host.waitForTimeout(1200);
+  console.log('rematch host', await st(host), 'guest', await st(guest));
+  await host.evaluate(() => document.querySelector('#menuBtn').click());
+  await host.click('#quitAsk'); await host.click('#quitYes');
+  await guest.waitForTimeout(1200);
+  console.log('guest notice', await guest.isVisible('#ask'), await guest.textContent('#askTitle'));
+  console.log('records host', await host.evaluate(() => JSON.stringify(window.__malang.store.profiles[0].online)), 'guest', await guest.evaluate(() => JSON.stringify(window.__malang.store.profiles[0].online)));
+  console.log('errors', JSON.stringify(errs));
+  await b.close();
+})();

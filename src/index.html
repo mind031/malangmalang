@@ -1,0 +1,232 @@
+<title>말랑말랑</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="찹쌀떡 친구들과 함께 두는 아이용 체스 게임">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+/*STYLE*/
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <filter id="mwob" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="3"></feTurbulence>
+      <feDisplacementMap in="SourceGraphic" scale="2.2"></feDisplacementMap>
+    </filter>
+  </defs>
+</svg>
+
+<div id="app">
+
+  <section class="screen" id="screen-start" aria-label="첫 화면">
+    <div class="start">
+      <div class="start-top">
+        <button type="button" class="chip" id="profileChip"><div class="av" id="chipAv"></div><span id="chipName">내 프로필</span></button>
+      </div>
+      <div class="start-main">
+        <div class="hero">
+          <div>
+            <h1>말랑말랑</h1>
+            <p>찹쌀떡 친구들이랑 체스 한 판!</p>
+          </div>
+          <div class="lineup" id="lineup"></div>
+        </div>
+        <div class="modes">
+          <button type="button" class="mode" id="modeLocal" style="background: var(--yellow)">
+            <div class="ic" id="icLocal"></div>
+            <div><b>같이 두기</b><small>한 기기로 마주 보고 둬요</small></div>
+          </button>
+          <button type="button" class="mode" id="modeAI" style="background: var(--mint)">
+            <div class="ic" id="icAI"></div>
+            <div><b>AI랑 두기</b><small>아기 떡부터 대장 떡까지 5단계</small></div>
+          </button>
+          <button type="button" class="mode" id="modeOnline" style="background: var(--sky)">
+            <div class="ic" id="icOnline"></div>
+            <div><b>온라인으로 두기</b><small>각자 기기로 친구랑 둬요</small></div>
+          </button>
+          <button type="button" class="link-btn" id="toGuide">떡 친구들 알아보기</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-setup" aria-label="게임 준비" hidden>
+    <div class="setup">
+      <div class="head">
+        <button type="button" class="icon-btn back" aria-label="뒤로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 L8 12 L15 19"/></svg></button>
+        <h1 id="setupTitle">AI랑 두기 준비</h1>
+      </div>
+      <div class="setup-body">
+        <div class="setup-left">
+          <h2 class="label" id="teamLabel">어느 팀 할래?</h2>
+          <div class="teams">
+            <button type="button" class="team" data-team="w" aria-pressed="true"><span class="badge">선택!</span><div class="trio" data-trio="w"></div><b>흰 떡 팀</b><small>먼저 시작해요</small></button>
+            <button type="button" class="team" data-team="b" aria-pressed="false"><span class="badge">선택!</span><div class="trio" data-trio="b"></div><b>검은 떡 팀</b><small>두 번째로 시작해요</small></button>
+          </div>
+          <p class="note" id="teamNote"></p>
+        </div>
+        <div class="setup-right">
+          <div id="levelBlock">
+            <h2 class="label" style="margin-bottom: 10px">AI 실력</h2>
+            <div class="levels" id="levels"></div>
+          </div>
+          <h2 class="label">특별 규칙</h2>
+          <div class="rules">
+            <div class="rule"><div><b>캐슬링</b><small>킹과 룩이 한 번에 자리를 바꿔요</small></div><button type="button" class="switch" data-rule="castle" aria-label="캐슬링 켜기" aria-pressed="false"></button></div>
+            <div class="rule"><div><b>앙파상</b><small>옆을 지나간 폰을 따라가서 잡아요</small></div><button type="button" class="switch" data-rule="ep" aria-label="앙파상 켜기" aria-pressed="false"></button></div>
+            <div class="rule"><div><b>폰 승급 고르기</b><small>끝까지 간 폰이 무엇이 될지 골라요. 끄면 자동으로 퀸이 돼요</small></div><button type="button" class="switch" data-rule="promoChoice" aria-label="폰 승급 고르기 켜기" aria-pressed="false"></button></div>
+          </div>
+          <h2 class="label">한 수 생각 시간</h2>
+          <div class="pills" id="times"></div>
+          <button type="button" class="btn big pink" id="startGame" style="margin-top: 8px">시작하기!</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen game" id="screen-game" aria-label="게임" hidden>
+    <div class="g-wrap" id="gWrap">
+      <div class="g-head">
+        <h1>말랑말랑</h1>
+        <button type="button" class="icon-btn" id="menuBtn" aria-label="메뉴"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 7 H19 M5 12 H19 M5 17 H19"/></svg></button>
+      </div>
+      <div class="g-top side" id="sideTop"></div>
+      <div class="g-board"><div class="board-frame"><div class="board" id="board"></div></div></div>
+      <div class="g-tip" id="tipMain"></div>
+      <div class="g-bottom side" id="sideBottom"></div>
+      <div class="g-actions actions" id="actionsMain"></div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-guide" aria-label="떡 친구들" hidden>
+    <div class="guide">
+      <div class="head">
+        <button type="button" class="icon-btn back" aria-label="뒤로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 L8 12 L15 19"/></svg></button>
+        <h1>떡 친구들 알아보기</h1>
+      </div>
+      <div class="guide-grid" id="guideGrid"></div>
+      <div class="extra">
+        <div><b>체크</b><p>킹이 잡힐 위기예요. 킹을 피하거나, 막거나, 공격한 떡을 잡아야 해요.</p></div>
+        <div><b>체크메이트</b><p>킹이 어디로 가도 잡히는 상태예요. 이렇게 되면 그 팀이 져요.</p></div>
+        <div><b>캐슬링</b><p>킹과 룩이 한 번도 안 움직였으면, 킹이 두 칸 옆으로 가고 룩이 킹 반대편으로 와요.</p></div>
+        <div><b>앙파상</b><p>상대 폰이 두 칸 앞으로 와서 내 폰 옆에 서면, 바로 다음 차례에 대각선으로 따라가서 잡을 수 있어요.</p></div>
+        <div><b>폰 승급</b><p>폰이 맨 끝 줄까지 가면 퀸, 룩, 비숍, 나이트 중 하나로 변신해요.</p></div>
+        <div><b>비기기</b><p>둘 수 있는 수가 없는데 체크가 아니면 비겨요. 같은 모양이 세 번 나와도 비겨요.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-profile" aria-label="프로필" hidden>
+    <div class="profile">
+      <div class="head">
+        <button type="button" class="icon-btn back" aria-label="뒤로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 L8 12 L15 19"/></svg></button>
+        <h1>프로필 · 전적</h1>
+      </div>
+      <div class="profile-body">
+        <div class="plist">
+          <h2 class="label">누가 할래?</h2>
+          <div id="plist" style="display:flex; flex-direction:column; gap:10px"></div>
+          <button type="button" class="padd" id="addProfile">+ 새 프로필</button>
+        </div>
+        <div class="pdetail" id="pdetail"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-online" aria-label="온라인으로 두기" hidden>
+    <div class="online">
+      <div class="head" style="align-self: stretch">
+        <button type="button" class="icon-btn back" aria-label="뒤로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5 L8 12 L15 19"/></svg></button>
+        <h1>온라인으로 두기</h1>
+      </div>
+      <div class="trio" id="onlineTrio"></div>
+      <div id="on-choose" class="on-choose">
+        <button type="button" class="mode" id="onCreate" style="background: var(--yellow)"><div><b>방 만들기</b><small>번호를 만들어 친구에게 알려 줘요</small></div></button>
+        <button type="button" class="mode" id="onJoin" style="background: var(--sky)"><div><b>방 들어가기</b><small>친구가 알려 준 번호를 넣어요</small></div></button>
+      </div>
+      <div id="on-join" class="on-join" hidden>
+        <div class="code" id="joinCode" aria-live="polite"><span></span><span></span><span></span><span></span></div>
+        <div class="numpad" id="numpad">
+          <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button>
+          <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button>
+          <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button>
+          <button type="button" data-k="del" aria-label="지우기">지우기</button><button type="button" data-k="0">0</button><button type="button" data-k="go" class="go">들어가기</button>
+        </div>
+      </div>
+      <div id="on-wait" class="on-wait" hidden>
+        <p class="label">우리 방 번호</p>
+        <div class="code big" id="waitCode">····</div>
+        <button type="button" class="btn" id="onCancel">방 닫기</button>
+      </div>
+      <p class="on-status" id="onStatus" role="status"></p>
+      <p class="note">두 기기가 서로 직접 이어져요. 대국 내용은 어디에도 저장되지 않아요.</p>
+    </div>
+  </section>
+
+  <div class="overlay" id="menu" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
+      <h2 id="menuTitle">메뉴</h2>
+      <div class="rules" style="padding: 4px 18px">
+        <div class="rule"><div><b>효과음</b><small>떡이 움직일 때 소리가 나요</small></div><button type="button" class="switch" id="soundSwitch" aria-label="효과음 켜기" aria-pressed="true"></button></div>
+        <div class="rule" id="facingRow"><div><b>마주 보기</b><small>위쪽 떡과 버튼을 거꾸로 돌려요</small></div><button type="button" class="switch" id="facingSwitch" aria-label="마주 보기 켜기" aria-pressed="true"></button></div>
+      </div>
+      <h3 class="label">흰 떡 색</h3>
+      <div class="swatches" id="wfSw"></div>
+      <h3 class="label">검은 떡 색</h3>
+      <div class="swatches" id="bfSw"></div>
+      <h3 class="label">판 색</h3>
+      <div class="swatches" id="tileSw"></div>
+      <div id="menuMain" class="row" style="margin-top: 6px">
+        <button type="button" class="btn" id="quitAsk">그만하기</button>
+        <button type="button" class="btn pink" id="menuClose">계속하기</button>
+      </div>
+      <div id="menuQuit" class="row" hidden>
+        <p style="flex-basis: 100%; font-size: 16px">이 판을 그만할까요? 그만두면 전적에 남지 않아요.</p>
+        <button type="button" class="btn" id="quitYes">처음으로</button>
+        <button type="button" class="btn pink" id="quitNo">계속하기</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="promo" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="promoTitle">
+      <h2 id="promoTitle">폰이 변신해요!</h2>
+      <p>무엇으로 변신할까요?</p>
+      <div class="promo-row" id="promoRow"></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="ask" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="askTitle">
+      <h2 id="askTitle"></h2>
+      <p id="askText" style="font-size: 17px; color: var(--ink-soft)"></p>
+      <div class="row">
+        <button type="button" class="btn" id="askNo">안 돼요</button>
+        <button type="button" class="btn pink" id="askYes">좋아요</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="win" hidden>
+    <div class="confetti" id="confetti"></div>
+    <div class="sheet win" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+      <div class="trio" id="winTrio"></div>
+      <h2 id="winTitle"></h2>
+      <p id="winSub" style="font-size: 17px; color: var(--ink-soft)"></p>
+      <div class="stamp" id="winStamp" hidden></div>
+      <div class="row" style="width: 100%; margin-top: 6px">
+        <button type="button" class="btn big pink" id="again">한 판 더!</button>
+        <button type="button" class="btn big" id="home">처음으로</button>
+      </div>
+      <button type="button" class="link-btn" id="seeBoard" style="font-size: 17px">판 다시 보기</button>
+    </div>
+  </div>
+</div>
+
+<script id="engine-src">
+/*ENGINE*/
+</script>
+<script>
+/*APP*/
+</script>
