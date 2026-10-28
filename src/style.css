@@ -324,6 +324,10 @@ p { margin: 0; }
 .online .on-status { min-height: 1.6em; color: var(--ink); font-size: 17px; }
 .online .on-status.bad { color: #A33F4F; }
 .online .note { font-size: 14px; }
+.share { display: flex; flex-direction: column; align-items: center; gap: 8px; width: min(440px, 100%); }
+.share input { width: 100%; box-sizing: border-box; min-height: 46px; padding: 0 14px; border: 3px dashed var(--line-soft); border-radius: 16px; background: var(--paper); font-size: 15px; color: var(--ink-soft); text-align: center; -webkit-user-select: text; user-select: text; }
+.share-row { display: flex; gap: 10px; width: 100%; }
+.share-row .btn { flex: 1 1 0; }
 
 @keyframes squash { 0% { transform: scale(1.12, .82); } 45% { transform: scale(.92, 1.1); } 100% { transform: scale(1, 1); } }
 @keyframes squash-flip { 0% { transform: rotate(180deg) scale(1.12, .82); } 45% { transform: rotate(180deg) scale(.92, 1.1); } 100% { transform: rotate(180deg) scale(1, 1); } }

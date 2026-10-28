@@ -744,6 +744,44 @@
   $('#onCreate').addEventListener('click', () => { SFX.tap(); openSetup('online'); });
   $('#onJoin').addEventListener('click', () => { SFX.tap(); joinDigits = ''; renderDigits(); onlineView('join'); onlineStatus('친구가 알려 준 방 번호 네 자리를 눌러요.'); });
   $('#onCancel').addEventListener('click', () => { SFX.tap(); openOnline(); });
+
+  /* 방 링크: 주소 끝에 #room-1234 를 붙여 보내면 누르는 사람이 바로 들어옴 */
+  function roomLink(code) { return location.origin + location.pathname + '#room-' + code; }
+  function showRoomLink(code) {
+    const box = $('#shareBox');
+    if (!/^https?:$/.test(location.protocol)) { box.hidden = true; return; }
+    $('#roomLink').value = roomLink(code);
+    $('#shareLink').hidden = !navigator.share;
+    $('#copyLink').textContent = '링크 복사';
+    box.hidden = false;
+  }
+  $('#shareLink').addEventListener('click', async () => {
+    SFX.tap();
+    try { await navigator.share({ title: '말랑말랑 체스', text: `말랑말랑에서 같이 체스 둬요! 방 번호 ${NET.code}`, url: roomLink(NET.code) }); } catch (e) { /* 보내기를 닫은 경우 */ }
+  });
+  $('#copyLink').addEventListener('click', async () => {
+    SFX.tap();
+    const input = $('#roomLink');
+    try {
+      await navigator.clipboard.writeText(input.value);
+      $('#copyLink').textContent = '복사했어요!';
+    } catch (e) {
+      input.focus(); input.select();
+      $('#copyLink').textContent = '글자를 길게 눌러 복사해요';
+    }
+  });
+  function joinFromLink() {
+    const m = /^#room-(\d{4})$/.exec(location.hash);
+    if (!m) return false;
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* 주소를 못 바꾸는 환경 */ }
+    openOnline();
+    joinDigits = m[1];
+    renderDigits();
+    onlineView('join');
+    joinRoom(m[1]);
+    return true;
+  }
+  window.addEventListener('hashchange', joinFromLink);
   $('#numpad').addEventListener('click', (e) => {
     const b = e.target.closest('button');
     if (!b) return;
@@ -766,6 +804,7 @@
     show('online');
     onlineView('wait');
     $('#waitCode').textContent = '····';
+    $('#shareBox').hidden = true;
     onlineStatus('방을 만들고 있어요…');
     if (!canGoOnline()) return;
     try { await loadPeerLib(); } catch (e) { onlineStatus('온라인 준비물을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.', true); return; }
@@ -777,7 +816,8 @@
       peer.on('open', () => {
         NET.code = code;
         $('#waitCode').textContent = code;
-        onlineStatus('친구를 기다리고 있어요. 친구 기기에서 “방 들어가기”를 누르고 이 번호를 넣어요.');
+        showRoomLink(code);
+        onlineStatus(/^https?:$/.test(location.protocol) ? '친구를 기다리고 있어요. 링크를 보내거나, 친구가 “방 들어가기”에 이 번호를 넣으면 돼요.' : '친구를 기다리고 있어요. 친구 기기에서 “방 들어가기”를 누르고 이 번호를 넣어요.');
       });
       peer.on('error', (err) => {
         if (err && err.type === 'unavailable-id' && n < 6) { try { peer.destroy(); } catch (e) { /* 무시 */ } tryOpen(n + 1); return; }
@@ -1158,6 +1198,7 @@
   applyColors();
   buildStatic();
   show('start');
+  joinFromLink();
 
   // 테스트용 손잡이
   window.__malang = { get G() { return G; }, startGame, store, E };

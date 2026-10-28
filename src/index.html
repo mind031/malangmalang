@@ -157,6 +157,14 @@
       <div id="on-wait" class="on-wait" hidden>
         <p class="label">우리 방 번호</p>
         <div class="code big" id="waitCode">····</div>
+        <div class="share" id="shareBox" hidden>
+          <label for="roomLink" class="note">이 링크를 친구에게 보내면 누르기만 해도 들어와요</label>
+          <input id="roomLink" readonly>
+          <div class="share-row">
+            <button type="button" class="btn pink" id="shareLink">링크 보내기</button>
+            <button type="button" class="btn" id="copyLink">링크 복사</button>
+          </div>
+        </div>
         <button type="button" class="btn" id="onCancel">방 닫기</button>
       </div>
       <p class="on-status" id="onStatus" role="status"></p>

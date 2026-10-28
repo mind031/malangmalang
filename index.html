@@ -1,3 +1,14 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="말랑말랑">
+<meta name="theme-color" content="#FBF7F1">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}</style>
+</head>
+<body>
 <title>말랑말랑</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="찹쌀떡 친구들과 함께 두는 아이용 체스 게임">
@@ -331,6 +342,10 @@ p { margin: 0; }
 .online .on-status { min-height: 1.6em; color: var(--ink); font-size: 17px; }
 .online .on-status.bad { color: #A33F4F; }
 .online .note { font-size: 14px; }
+.share { display: flex; flex-direction: column; align-items: center; gap: 8px; width: min(440px, 100%); }
+.share input { width: 100%; box-sizing: border-box; min-height: 46px; padding: 0 14px; border: 3px dashed var(--line-soft); border-radius: 16px; background: var(--paper); font-size: 15px; color: var(--ink-soft); text-align: center; -webkit-user-select: text; user-select: text; }
+.share-row { display: flex; gap: 10px; width: 100%; }
+.share-row .btn { flex: 1 1 0; }
 
 @keyframes squash { 0% { transform: scale(1.12, .82); } 45% { transform: scale(.92, 1.1); } 100% { transform: scale(1, 1); } }
 @keyframes squash-flip { 0% { transform: rotate(180deg) scale(1.12, .82); } 45% { transform: rotate(180deg) scale(.92, 1.1); } 100% { transform: rotate(180deg) scale(1, 1); } }
@@ -507,6 +522,14 @@ p { margin: 0; }
       <div id="on-wait" class="on-wait" hidden>
         <p class="label">우리 방 번호</p>
         <div class="code big" id="waitCode">····</div>
+        <div class="share" id="shareBox" hidden>
+          <label for="roomLink" class="note">이 링크를 친구에게 보내면 누르기만 해도 들어와요</label>
+          <input id="roomLink" readonly>
+          <div class="share-row">
+            <button type="button" class="btn pink" id="shareLink">링크 보내기</button>
+            <button type="button" class="btn" id="copyLink">링크 복사</button>
+          </div>
+        </div>
         <button type="button" class="btn" id="onCancel">방 닫기</button>
       </div>
       <p class="on-status" id="onStatus" role="status"></p>
@@ -1739,6 +1762,44 @@ p { margin: 0; }
   $('#onCreate').addEventListener('click', () => { SFX.tap(); openSetup('online'); });
   $('#onJoin').addEventListener('click', () => { SFX.tap(); joinDigits = ''; renderDigits(); onlineView('join'); onlineStatus('친구가 알려 준 방 번호 네 자리를 눌러요.'); });
   $('#onCancel').addEventListener('click', () => { SFX.tap(); openOnline(); });
+
+  /* 방 링크: 주소 끝에 #room-1234 를 붙여 보내면 누르는 사람이 바로 들어옴 */
+  function roomLink(code) { return location.origin + location.pathname + '#room-' + code; }
+  function showRoomLink(code) {
+    const box = $('#shareBox');
+    if (!/^https?:$/.test(location.protocol)) { box.hidden = true; return; }
+    $('#roomLink').value = roomLink(code);
+    $('#shareLink').hidden = !navigator.share;
+    $('#copyLink').textContent = '링크 복사';
+    box.hidden = false;
+  }
+  $('#shareLink').addEventListener('click', async () => {
+    SFX.tap();
+    try { await navigator.share({ title: '말랑말랑 체스', text: `말랑말랑에서 같이 체스 둬요! 방 번호 ${NET.code}`, url: roomLink(NET.code) }); } catch (e) { /* 보내기를 닫은 경우 */ }
+  });
+  $('#copyLink').addEventListener('click', async () => {
+    SFX.tap();
+    const input = $('#roomLink');
+    try {
+      await navigator.clipboard.writeText(input.value);
+      $('#copyLink').textContent = '복사했어요!';
+    } catch (e) {
+      input.focus(); input.select();
+      $('#copyLink').textContent = '글자를 길게 눌러 복사해요';
+    }
+  });
+  function joinFromLink() {
+    const m = /^#room-(\d{4})$/.exec(location.hash);
+    if (!m) return false;
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* 주소를 못 바꾸는 환경 */ }
+    openOnline();
+    joinDigits = m[1];
+    renderDigits();
+    onlineView('join');
+    joinRoom(m[1]);
+    return true;
+  }
+  window.addEventListener('hashchange', joinFromLink);
   $('#numpad').addEventListener('click', (e) => {
     const b = e.target.closest('button');
     if (!b) return;
@@ -1761,6 +1822,7 @@ p { margin: 0; }
     show('online');
     onlineView('wait');
     $('#waitCode').textContent = '····';
+    $('#shareBox').hidden = true;
     onlineStatus('방을 만들고 있어요…');
     if (!canGoOnline()) return;
     try { await loadPeerLib(); } catch (e) { onlineStatus('온라인 준비물을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.', true); return; }
@@ -1772,7 +1834,8 @@ p { margin: 0; }
       peer.on('open', () => {
         NET.code = code;
         $('#waitCode').textContent = code;
-        onlineStatus('친구를 기다리고 있어요. 친구 기기에서 “방 들어가기”를 누르고 이 번호를 넣어요.');
+        showRoomLink(code);
+        onlineStatus(/^https?:$/.test(location.protocol) ? '친구를 기다리고 있어요. 링크를 보내거나, 친구가 “방 들어가기”에 이 번호를 넣으면 돼요.' : '친구를 기다리고 있어요. 친구 기기에서 “방 들어가기”를 누르고 이 번호를 넣어요.');
       });
       peer.on('error', (err) => {
         if (err && err.type === 'unavailable-id' && n < 6) { try { peer.destroy(); } catch (e) { /* 무시 */ } tryOpen(n + 1); return; }
@@ -2153,9 +2216,13 @@ p { margin: 0; }
   applyColors();
   buildStatic();
   show('start');
+  joinFromLink();
 
   // 테스트용 손잡이
   window.__malang = { get G() { return G; }, startGame, store, E };
 })();
 
 </script>
+
+</body>
+</html>
