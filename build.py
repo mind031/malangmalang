@@ -15,6 +15,9 @@ page = ('<!doctype html>\n<html lang="ko">\n<head>\n<meta charset="utf-8">\n'
         '<meta name="apple-mobile-web-app-capable" content="yes">\n'
         '<meta name="apple-mobile-web-app-title" content="말랑말랑">\n'
         '<meta name="theme-color" content="#FBF7F1">\n'
+        '<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">\n'
+        '<link rel="icon" type="image/png" href="icons/favicon.png">\n'
+        '<link rel="manifest" href="manifest.webmanifest">\n'
         '<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}</style>\n'
         '</head>\n<body>\n' + html + '\n</body>\n</html>\n')
 (root / 'index.html').write_text(page)
